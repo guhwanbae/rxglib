@@ -57,7 +57,7 @@ class console {
   }
 
  private:
-  console() : mutex_{}, init_point_{clock_type::now()} {}
+  console() = default;
   ~console() = default;
 
   static console& instance() {
@@ -66,7 +66,6 @@ class console {
   }
 
   std::mutex mutex_;
-  clock_type::time_point init_point_;
 };
 
 }  // namespace rxglib
