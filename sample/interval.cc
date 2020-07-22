@@ -1,8 +1,9 @@
 #include <chrono>
 
-#include "console.hpp"
 #include "rxcpp/rx.hpp"
-#include "rxglib.hpp"
+
+#include "rxglib/console.hpp"
+#include "rxglib/run_loop.hpp"
 
 int main() {
   rxglib::console::out("main\n");

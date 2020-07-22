@@ -58,20 +58,19 @@ class run_loop {
       auto queued_task = g_idle_source_new();
       using Args = std::pair<run_loop*, clock_type::time_point>;
       auto args = new Args{this, wakeup_point};
-      g_source_set_callback(
-          queued_task,
-          [](gpointer data) -> gboolean {
-            auto args = static_cast<Args*>(data);
-            auto this_ptr = args->first;
-            const auto& wakeup_point = args->second;
-            this_ptr->on_earlier_wakeup(wakeup_point);
-            return false;
-          },
-          args,
-          [](gpointer data) {
-            auto args = static_cast<Args*>(data);
-            delete args;
-          });
+      g_source_set_callback(queued_task,
+                            [](gpointer data) -> gboolean {
+                              auto args = static_cast<Args*>(data);
+                              auto this_ptr = args->first;
+                              const auto& wakeup_point = args->second;
+                              this_ptr->on_earlier_wakeup(wakeup_point);
+                              return false;
+                            },
+                            args,
+                            [](gpointer data) {
+                              auto args = static_cast<Args*>(data);
+                              delete args;
+                            });
       g_source_attach(queued_task, context_);
       g_source_unref(queued_task);
     }
@@ -96,19 +95,18 @@ class run_loop {
 
     auto millisec = static_cast<guint>(
         std::max(std::chrono::duration_cast<std::chrono::milliseconds>(
-                     clock_type::now() - wakeup_point)
-                     .count(),
-                 0LL));
+                     clock_type::now() - wakeup_point),
+                 std::chrono::milliseconds::zero())
+            .count());
     auto new_timeout_source = g_timeout_source_new(millisec);
-    g_source_set_callback(
-        new_timeout_source,
-        [](gpointer data) -> gboolean {
-          // Dispatch scheduled rx events.
-          auto this_ptr = static_cast<run_loop*>(data);
-          this_ptr->on_rx_event_scheduled();
-          return false;
-        },
-        this, nullptr);
+    g_source_set_callback(new_timeout_source,
+                          [](gpointer data) -> gboolean {
+                            // Dispatch scheduled rx events.
+                            auto this_ptr = static_cast<run_loop*>(data);
+                            this_ptr->on_rx_event_scheduled();
+                            return false;
+                          },
+                          this, nullptr);
     g_source_attach(new_timeout_source, context_);
     timeout_source_ = new_timeout_source;
     timeout_point_ = wakeup_point;
